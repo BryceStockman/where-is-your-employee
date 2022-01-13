@@ -1,5 +1,18 @@
+const express = require('express');
 const inquirer = require('inquirer');
 const fs = require('fs');
+
+const PORT = process.env.PORT || 3001;
+const app = express();
+const apiRoutes = require('./routes/apiRoutes');
+const htmlRoutes = require('./routes/htmlRoutes');
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// Use apiRoutes
+app.use('/api', apiRoutes);
+app.use('/', htmlRoutes);
 
 const Employee = require('./lib/Employee');
 
@@ -60,14 +73,41 @@ const promptEmployee = () => {
           }
         },
       },
+      {
+        type: 'confirm',
+        name: 'confirmAddEmployee',
+        message: 'Would you like to add another employee? (Required)',
+        validate: (managerIdInput) => {
+          if (managerIdInput) {
+            return true;
+          } else {
+            console.log(
+              'Please confirm if you would like to add another employee'
+            );
+            return false;
+          }
+        },
+      },
     ])
     .then((info) => {
       console.log(info);
+      // QUESTION: HOW DO I CONVERT THE BOOLEAN TRUE TO THE NUMBER MYSQL IS LOOKING FOR?
       const { firstName, lastName, roleId, managerId } = info;
       const employee = new Employee(firstName, lastName, roleId, managerId);
       console.log(employee);
       employeeData.push(employee);
+
+      if (info.confirmAddEmployee) {
+        promptEmployee();
+      } else {
+        console.log('moving on, need to decide what to do here');
+      }
     });
 };
+// promptEmployee();
 
-promptEmployee();
+
+
+app.listen(PORT, () => {
+  console.log(`API server now on port ${PORT}!`);
+});
