@@ -47,6 +47,7 @@ const promptEmployee = () => {
           }
         },
       },
+      // THIS SHOULD BE A LIST OF ROLES FOR THE USER TO CHOOSE
       {
         type: 'number',
         name: 'roleId',
@@ -60,6 +61,7 @@ const promptEmployee = () => {
           }
         },
       },
+      // THIS SHOULD BE A INPUT ASKING WHO IS THE MANAGER
       {
         type: 'confirm',
         name: 'managerId',

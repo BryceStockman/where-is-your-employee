@@ -9,7 +9,7 @@ CREATE TABLE employee (
 CREATE TABLE role (
   id INTEGER AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(30) NOT NULL,
-  salary decimal(8, 2),
+  salary decimal(6, 0),
   department_id INTEGER
 );
 

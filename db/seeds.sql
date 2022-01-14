@@ -17,10 +17,10 @@ VALUES
 INSERT INTO role
   (title, salary, department_id)
 VALUES
-  ('Manager', 150000.00, 1),
-  ('Account Manager', 100000.00, 1),
-  ('Account Specialist', 80000.00, 1),
-  ('Account Coordinator', 50000.00, 1),
+  ('Manager', 150000, 1),
+  ('Account Manager', 100000, 1),
+  ('Account Specialist', 80000, 1),
+  ('Account Coordinator', 50000, 1),
 
 INSERT INTO department
   (name)
