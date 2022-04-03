@@ -1,28 +1,15 @@
-// const express = require('express');
+require('dotenv').config();
+const db = require('./db/connection');
 const inquirer = require('inquirer');
-const fs = require('fs');
-
-// const PORT = process.env.PORT || 3001;
-// const app = express();
-// const apiRoutes = require('./routes/apiRoutes');
-// const htmlRoutes = require('./routes/htmlRoutes');
-
-// app.use(express.urlencoded({ extended: true }));
-// app.use(express.json());
-
-// Use apiRoutes
-// app.use('/api', apiRoutes);
-// app.use('/', htmlRoutes);
 
 const Employee = require('./lib/Employee');
 
-const employeeData = [];
-const departmentData = [];
-const roleData = [];
+function start() {
+  promptUser();
+}
 
-// LOOK AT THE CHALLENGE SNAPSHOTS TO ADJUST THE INQUIRER PROMPTS
-const promptUser = () => {
-  inquirer
+const promptUser = async () => {
+  await inquirer
     .prompt([
       {
         type: 'list',
@@ -44,8 +31,14 @@ const promptUser = () => {
           }
         },
       },
+      {
+        type: 'input',
+        name: 'test',
+        message: 'add something',
+      },
     ])
     .then((info) => {
+      console.log('.then');
       const toDo = info.toDo;
       if (toDo === 'Add Department') {
         promptDepartment();
@@ -95,13 +88,20 @@ const promptDepartment = () => {
     ])
     .then((info) => {
       const { department } = info;
-      departmentData.push(department);
+      // MYSQL INSERT INTO TABLE
+      const sql = `INSERT INTO department (name)
+      VALUES (${department});`;
 
-      if (info.addDepartment) {
-        promptDepartment();
-      } else {
-        promptUser();
-      }
+      db.query(sql, (err, res) => {
+        console.log('data added to table');
+        if (err) {
+          console.log(err);
+        } else if (info.addDepartment) {
+          promptDepartment();
+        } else {
+          promptUser();
+        }
+      });
     });
 };
 
@@ -122,6 +122,32 @@ const promptRole = () => {
         },
       },
       {
+        type: 'input',
+        name: 'salary',
+        message: "What is that role's salary? (Required)",
+        validate: (salaryInput) => {
+          if (salaryInput) {
+            return true;
+          } else {
+            console.log('Please enter a salary');
+            return false;
+          }
+        },
+      },
+      {
+        type: 'input',
+        name: 'departmentId',
+        message: "What is that role's department id? (Required)",
+        validate: (departmentIdInput) => {
+          if (departmentIdInput) {
+            return true;
+          } else {
+            console.log('Please enter a department ID');
+            return false;
+          }
+        },
+      },
+      {
         type: 'confirm',
         name: 'addRole',
         message: 'Would you like to add another role? (Required)',
@@ -136,14 +162,21 @@ const promptRole = () => {
       },
     ])
     .then((info) => {
-      const { role } = info;
-      roleData.push(role);
+      const { role, salary, departmentId } = info;
+      // MYSQL INSERT INTO TABLE
+      const sql = `INSERT INTO role (title, salary, department_id)
+      VALUES (${role}, ${salary}, ${departmentId});`;
 
-      if (info.addRole) {
-        promptRole();
-      } else {
-        promptUser();
-      }
+      db.query(sql, (err, res) => {
+        console.log('data added to table');
+        if (err) {
+          console.log(err);
+        } else if (info.addDepartment) {
+          promptRole();
+        } else {
+          promptUser();
+        }
+      });
     });
 };
 
@@ -191,10 +224,10 @@ function promptEmployee() {
       },
       {
         type: 'input',
-        name: 'manager',
-        message: "Who is this employee's manager? (Required)",
-        validate: (managerInput) => {
-          if (managerInput) {
+        name: 'managerId',
+        message: "What is the manager's ID? (Required)",
+        validate: (managerIdInput) => {
+          if (managerIdInput) {
             return true;
           } else {
             console.log('Please confirm');
@@ -220,8 +253,8 @@ function promptEmployee() {
     ])
     .then((info) => {
       // QUESTION: HOW DO I CONVERT THE BOOLEAN TRUE TO THE NUMBER MYSQL IS LOOKING FOR?
-      const { firstName, lastName, roleId, manager } = info;
-      const employee = new Employee(firstName, lastName, roleId, manager);
+      const { firstName, lastName, roleId, managerId } = info;
+      const employee = new Employee(firstName, lastName, roleId, managerId);
       employeeData.push(employee);
 
       if (info.confirmAddEmployee) {
@@ -236,19 +269,21 @@ function promptUpdateEmployee() {
   inquirer
     .prompt([
       {
-        type: 'list',
+        type: 'input',
         name: 'updateEmployee',
-        message: "Which employee's role do you want to update? (Required)",
-        choices: [
-          // QUESTION: CAN I INSERT DATA IN HERE, IF SO, HOW?
-        ],
+        message: "What is the employee's id? (Required)",
         validate: (updateEmployeeInput) => {
-          if (updateEmployeeInput) {
-            return true;
-          } else {
-            console.log('Please enter what you would like to do');
-            return false;
-          }
+          db.query(
+            `SELECT * FROM employee WHERE employee.id = ${updateEmployeeInput}`,
+            (err, res) => {
+              if (err) {
+                console.log('Please enter a valid ID');
+                return false;
+              } else {
+                return true;
+              }
+            }
+          );
         },
       },
       {
@@ -279,26 +314,21 @@ function promptUpdateEmployee() {
       },
     ])
     .then((info) => {
-      // QUESTION: I DON'T REALLY KNOW WHAT TO DO HERE
-      const { updateEmployee, updateRole } = info;
-      const updatedEmployee = new Employee(
-        firstName,
-        lastName,
-        roleId,
-        managerId
-      );
-      employeeData.push(employee);
+      const { firstName, lastName, roleId, managerId } = info;
+      const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
+      VALUES (${firstName}, ${lastName}, ${roleId}, ${managerId});`;
 
-      if (info.updateAnotherEmployee) {
-        promptUpdateEmployee();
-      } else {
-        promptUser();
-      }
+      db.query(sql, (err, res) => {
+        console.log('data added to table');
+        if (err) {
+          console.log(err);
+        } else if (info.updateAnotherEmployee) {
+          promptEmployee();
+        } else {
+          promptUser();
+        }
+      });
     });
 }
 
-promptUser();
-
-// app.listen(PORT, () => {
-//   console.log(`API server now on port ${PORT}!`);
-// });
+start();

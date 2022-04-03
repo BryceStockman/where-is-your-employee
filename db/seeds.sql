@@ -20,7 +20,7 @@ VALUES
   ('Manager', 150000, 1),
   ('Account Manager', 100000, 1),
   ('Account Specialist', 80000, 1),
-  ('Account Coordinator', 50000, 1),
+  ('Account Coordinator', 50000, 1);
 
 INSERT INTO department
   (name)
@@ -28,5 +28,5 @@ VALUES
   ('Social'),
   ('SEO'),
   ('PPC'),
-  ('Email'),
+  ('Email');
 
