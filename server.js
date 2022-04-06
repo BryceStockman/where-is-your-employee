@@ -8,8 +8,8 @@ function start() {
   promptUser();
 }
 
-const promptUser = async () => {
-  await inquirer
+const promptUser = () => {
+  inquirer
     .prompt([
       {
         type: 'list',
@@ -31,14 +31,8 @@ const promptUser = async () => {
           }
         },
       },
-      {
-        type: 'input',
-        name: 'test',
-        message: 'add something',
-      },
     ])
     .then((info) => {
-      console.log('.then');
       const toDo = info.toDo;
       if (toDo === 'Add Department') {
         promptDepartment();
@@ -89,10 +83,9 @@ const promptDepartment = () => {
     .then((info) => {
       const { department } = info;
       // MYSQL INSERT INTO TABLE
-      const sql = `INSERT INTO department (name)
-      VALUES (${department});`;
+      const sql = 'INSERT INTO department SET ?';
 
-      db.query(sql, (err, res) => {
+      db.query(sql, { name: department }, (err, res) => {
         console.log('data added to table');
         if (err) {
           console.log(err);
@@ -110,13 +103,13 @@ const promptRole = () => {
     .prompt([
       {
         type: 'input',
-        name: 'role',
-        message: 'What role you would like to add? (Required)',
-        validate: (roleInput) => {
-          if (roleInput) {
+        name: 'title',
+        message: 'What title you would like to add? (Required)',
+        validate: (titleInput) => {
+          if (titleInput) {
             return true;
           } else {
-            console.log('Please enter what role you would like to add');
+            console.log('Please enter what title you would like to add');
             return false;
           }
         },
@@ -124,7 +117,7 @@ const promptRole = () => {
       {
         type: 'input',
         name: 'salary',
-        message: "What is that role's salary? (Required)",
+        message: "What is that title's salary? (Required)",
         validate: (salaryInput) => {
           if (salaryInput) {
             return true;
@@ -137,7 +130,7 @@ const promptRole = () => {
       {
         type: 'input',
         name: 'departmentId',
-        message: "What is that role's department id? (Required)",
+        message: "What is that title's department id? (Required)",
         validate: (departmentIdInput) => {
           if (departmentIdInput) {
             return true;
@@ -149,10 +142,10 @@ const promptRole = () => {
       },
       {
         type: 'confirm',
-        name: 'addRole',
-        message: 'Would you like to add another role? (Required)',
-        validate: (addRoleInput) => {
-          if (addRoleInput) {
+        name: 'addtitle',
+        message: 'Would you like to add another title? (Required)',
+        validate: (addtitleInput) => {
+          if (addtitleInput) {
             return true;
           } else {
             console.log('Please confirm');
@@ -162,21 +155,24 @@ const promptRole = () => {
       },
     ])
     .then((info) => {
-      const { role, salary, departmentId } = info;
+      const { title, salary, department_id } = info;
       // MYSQL INSERT INTO TABLE
-      const sql = `INSERT INTO role (title, salary, department_id)
-      VALUES (${role}, ${salary}, ${departmentId});`;
+      const sql = 'INSERT INTO role SET ?';
 
-      db.query(sql, (err, res) => {
-        console.log('data added to table');
-        if (err) {
-          console.log(err);
-        } else if (info.addDepartment) {
-          promptRole();
-        } else {
-          promptUser();
+      db.query(
+        sql,
+        { title: title, salary: salary, department_id: department_id },
+        (err, res) => {
+          console.log('data added to table');
+          if (err) {
+            console.log(err);
+          } else if (info.addDepartment) {
+            promptRole();
+          } else {
+            promptUser();
+          }
         }
-      });
+      );
     });
 };
 
@@ -254,8 +250,28 @@ function promptEmployee() {
     .then((info) => {
       // QUESTION: HOW DO I CONVERT THE BOOLEAN TRUE TO THE NUMBER MYSQL IS LOOKING FOR?
       const { firstName, lastName, roleId, managerId } = info;
-      const employee = new Employee(firstName, lastName, roleId, managerId);
-      employeeData.push(employee);
+
+      const sql = 'INSERT INTO employee SET ?';
+
+      db.query(
+        sql,
+        {
+          first_name: firstName,
+          last_name: lastName,
+          role_id: roleId,
+          manager_id: managerId,
+        },
+        (err, res) => {
+          console.log('data added to table');
+          if (err) {
+            console.log(err);
+          } else if (info.addEmployee) {
+            promptEmployee();
+          } else {
+            promptUser();
+          }
+        }
+      );
 
       if (info.confirmAddEmployee) {
         promptEmployee();
@@ -315,8 +331,8 @@ function promptUpdateEmployee() {
     ])
     .then((info) => {
       const { firstName, lastName, roleId, managerId } = info;
-      const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
-      VALUES (${firstName}, ${lastName}, ${roleId}, ${managerId});`;
+      const sql = `INSERT INTO employee ('first_name, last_name, role_id, manager_id')
+      VALUES ('${firstName}, ${lastName}, ${roleId}, ${managerId}');`;
 
       db.query(sql, (err, res) => {
         console.log('data added to table');
